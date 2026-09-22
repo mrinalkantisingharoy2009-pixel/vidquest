@@ -1,0 +1,106 @@
+# VidQuest: Master Architecture & AI System Prompt
+
+**File Type:** `prompt.md` / `README.md`
+**Target Environment:** Cursor AI, GitHub Copilot, Trae AI, Bolt.new
+
+> **System Directive for AI Coding Assistants:**
+> You are a senior full-stack developer. Your task is to build a production-ready mobile application (Flutter/React Native) and web admin portal (React/Next.js) for VidQuest based on the following strict technical specification. Do not use dummy data or simulated state arrays. Implement fully functioning backend services, database transactions, and secure routing.
+
+## 1. Core Application Concept & Branding
+*   **Platform:** VidQuest
+*   **Target Audience:** Gen-Z users and digital content creators.
+*   **UI/UX Theme:** Dark mode default (deep black and charcoal backgrounds) with electric blue and neon purple accents. Implement glass-morphism for cards and overlays.
+*   **Brand Mascot:** Incorporate "Paradox the Skelly" (a 3D, Pixar-style skeleton wearing modern streetwear) into empty states, error screens, and onboarding flows.
+
+## 2. Role-Based Access Control (RBAC) & Authentication
+*   **Authentication Flow:** Primary login via Phone Number OTP (Twilio/Firebase Auth), supported by secondary Desktop QR Code Sync.
+*   **System Roles:** `user`, `creator`, `admin`, `super_admin`.
+*   **Super Admin Lock:** The email `mrinalkantisingharoy2009@gmail.com` must be hardcoded at the database security level as the absolute `super_admin`.
+*   **Security Rule:** Only the `super_admin` can alter platform pricing, approve financial withdrawals, authorize creator campaigns, or assign standard `admin` roles to other users.
+
+## 3. Frontend Architecture: The 4 Core User Screens
+Implement a persistent bottom navigation bar routing to the following screens:
+
+1.  **The Teaser Feed (Home):**
+    *   Full-screen, swipeable vertical video feed.
+    *   Right-side interaction bar (Like, Bookmark, Share).
+    *   "Watch Full on YouTube" primary action button.
+    *   **Logic:** A floating "Hunt Quiz" button remains disabled until the user watches the 15-second teaser to 100% completion.
+2.  **The Hunt (Quiz Zone):**
+    *   Gamified trivia interface with a 10-second active countdown bar.
+    *   Frosted-glass question cards with 4 interactive multiple-choice options (toggling green/red upon selection).
+    *   **Logic:** Upon achieving a passing score, trigger a visual "Coin Drop" animation.
+3.  **Micro-Gig Marketplace:**
+    *   Scrollable freelance hub for thumbnail design, scriptwriting, and editing tasks.
+    *   Top search bar equipped with dynamic category filter chips.
+    *   Job cards displaying budget, urgency metric, and an "Accept Gig" action button.
+4.  **Digital Wallet & Profile:**
+    *   Live balance tracker displaying earned platform coins.
+    *   Skill badge grid (e.g., "Top Designer", "Quiz Master").
+    *   Toggle switch to alternate between 'Earner/Freelancer' and 'Creator/Employer' modes.
+
+## 4. Backend Validation & Quiz Engine
+*   **Quiz Structure:** Quizzes linked to long-form YouTube videos contain 5 to 6 questions.
+*   **Passing Threshold:** Users must score a minimum of 4 out of 5 (or 4 out of 6) to pass.
+*   **Transaction Logic:** Upon a passing score, the backend must execute an atomic database transaction (`runTransaction`) to credit the user's `wallet_balance`.
+*   **Exploit Prevention:** Enforce a strict one-reward-per-user-per-video rule at the database level to prevent double-spending.
+
+## 5. Creator Studio & Campaign Funding
+*   **Onboarding:** Creators submit an application to run campaigns. The dashboard remains locked until approved by the `admin`.
+*   **Campaign Builder:** Creators input their target audience size, and the system dynamically calculates the cost (e.g., 1,000 views = ₹1,000). Apply logic for multi-day duration packs (e.g., a 5-day campaign priced dynamically at ₹3,000-₹4,000).
+*   **Teaser Add-On:** Provide a checkbox for "VidQuest Team Teaser Creation" which appends a configurable fee (₹200–₹300) to the total bill.
+*   **Payment Flow (Phase 1 & Phase 2):**
+    *   Present the platform's official UPI QR code inside a glass-morphism container.
+    *   Provide input fields for the creator to submit a 12-digit UTR/Transaction ID and upload a payment receipt screenshot.
+    *   Include a "Pay via Razorpay" button for automated checkout.
+    *   Set campaign status to `pending_verification` until the Admin verifies the UTR.
+
+## 6. The Payout Gateway & Tiered Withdrawals
+Users cannot arbitrarily drain funds. The backend must enforce the following tiers:
+*   **Tier 1 (₹40 Balance):** Mobile Network Recharge (Requires user to input carrier and mobile number).
+*   **Tier 2 (₹50+ Balance):** Google Play Redeem Code (Distributed securely to the user's registered email/phone).
+*   **Tier 3 (₹100+ Balance):** Direct UPI Cash Transfer (Requires user to input a valid UPI ID or upload a personal QR code).
+*   **Escrow Logic:** When a withdrawal is requested, immediately deduct the amount from `wallet_balance` and move it to an `escrow_locked` status until Admin approval.
+
+## 7. Super Admin Dashboard (Web Portal)
+Build a secure, responsive dashboard accessible solely by `mrinalkantisingharoy2009@gmail.com`:
+*   **Campaign Management:** Table view of `pending_verification` campaigns. Features an image viewer for UPI screenshots, UTR validation, and a one-click toggle to set campaigns to `active`.
+*   **Pricing Controller:** Real-time form to adjust audience rate multipliers, duration pack discounts, and teaser creation fees.
+*   **Withdrawal Desk:** Queue of pending user payout requests. Includes functionality to approve/reject requests, clear escrow, and upload payout proof receipts.
+*   **Content Manager:** Interface allowing the Admin to publish standalone platform quizzes or sponsor-backed reward drops.
+
+## 8. Database Schema Outline
+```json
+{
+  "users": {
+    "uid": "string",
+    "phone": "string",
+    "role": "string",
+    "wallet_balance": 0.0,
+    "escrow_locked": 0.0
+  },
+  "creators": {
+    "uid": "string",
+    "brand_name": "string",
+    "status": "pending|approved"
+  },
+  "campaigns": {
+    "creator_id": "string",
+    "youtube_url": "string",
+    "budget": 0.0,
+    "utr_number": "string",
+    "status": "pending_verification|active"
+  },
+  "quizzes": {
+    "video_id": "string",
+    "questions": [],
+    "reward_amount": 0.0,
+    "passing_threshold": 4
+  },
+  "withdrawals": {
+    "user_id": "string",
+    "amount": 0.0,
+    "payout_type": "recharge|play_code|upi",
+    "status": "pending|approved"
+  }
+}
